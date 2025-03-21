@@ -38,6 +38,7 @@
             jPGToolStripMenuItem = new ToolStripMenuItem();
             mP4ToolStripMenuItem = new ToolStripMenuItem();
             mOVToolStripMenuItem = new ToolStripMenuItem();
+            添加后缀ToolStripMenuItem = new ToolStripMenuItem();
             添加MP4后缀ToolStripMenuItem = new ToolStripMenuItem();
             添加ZIP后缀ToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
@@ -70,7 +71,7 @@
             // 
             // 选项ToolStripMenuItem
             // 
-            选项ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 一键伪装ToolStripMenuItem, 面具伪装ToolStripMenuItem, 简易伪装ToolStripMenuItem, 添加MP4后缀ToolStripMenuItem, 添加ZIP后缀ToolStripMenuItem, toolStripSeparator2, 窗口置顶ToolStripMenuItem, toolStripSeparator1, 退出ToolStripMenuItem });
+            选项ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 一键伪装ToolStripMenuItem, 面具伪装ToolStripMenuItem, 简易伪装ToolStripMenuItem, 添加后缀ToolStripMenuItem, toolStripSeparator2, 窗口置顶ToolStripMenuItem, toolStripSeparator1, 退出ToolStripMenuItem });
             选项ToolStripMenuItem.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             选项ToolStripMenuItem.Name = "选项ToolStripMenuItem";
             选项ToolStripMenuItem.Size = new Size(44, 21);
@@ -133,11 +134,18 @@
             mOVToolStripMenuItem.ToolTipText = "不使用面具文件，而是使用MOV文件的二进制特征文件头，对真身文件进行伪装\r\n伪装后，真身文件对于操作系统来说已经是MOV格式，只是无法被播放\r\n适配场景较少，不建议使用";
             mOVToolStripMenuItem.Click += mOVToolStripMenuItem_Click;
             // 
+            // 添加后缀ToolStripMenuItem
+            // 
+            添加后缀ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 添加MP4后缀ToolStripMenuItem, 添加ZIP后缀ToolStripMenuItem });
+            添加后缀ToolStripMenuItem.Name = "添加后缀ToolStripMenuItem";
+            添加后缀ToolStripMenuItem.Size = new Size(180, 22);
+            添加后缀ToolStripMenuItem.Text = "添加后缀";
+            // 
             // 添加MP4后缀ToolStripMenuItem
             // 
             添加MP4后缀ToolStripMenuItem.Name = "添加MP4后缀ToolStripMenuItem";
             添加MP4后缀ToolStripMenuItem.Size = new Size(180, 22);
-            添加MP4后缀ToolStripMenuItem.Text = "添加MP4后缀";
+            添加MP4后缀ToolStripMenuItem.Text = "MP4";
             添加MP4后缀ToolStripMenuItem.ToolTipText = "将拖入的文件批量添加.mp4后缀，不修改文件内容";
             添加MP4后缀ToolStripMenuItem.Click += 添加MP4后缀ToolStripMenuItem_Click;
             // 
@@ -145,7 +153,7 @@
             // 
             添加ZIP后缀ToolStripMenuItem.Name = "添加ZIP后缀ToolStripMenuItem";
             添加ZIP后缀ToolStripMenuItem.Size = new Size(180, 22);
-            添加ZIP后缀ToolStripMenuItem.Text = "添加ZIP后缀";
+            添加ZIP后缀ToolStripMenuItem.Text = "ZIP";
             添加ZIP后缀ToolStripMenuItem.ToolTipText = "将拖入的文件批量添加.zip后缀，不修改文件内容";
             添加ZIP后缀ToolStripMenuItem.Click += 添加ZIP后缀ToolStripMenuItem_Click;
             // 
@@ -318,6 +326,7 @@
         private ToolStripMenuItem 窗口置顶ToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripMenuItem jPGToolStripMenuItem;
+        private ToolStripMenuItem 添加后缀ToolStripMenuItem;
         private ToolStripMenuItem 添加MP4后缀ToolStripMenuItem;
         private ToolStripMenuItem 添加ZIP后缀ToolStripMenuItem;
         private TableLayoutPanel tableLayoutPanel1;
