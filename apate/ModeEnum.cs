@@ -13,6 +13,8 @@ namespace apate
         Exe,
         Jpg,
         Mp4,
-        Mov
+        Mov,
+        AddMp4Extension,
+        AddZipExtension
     }
 }

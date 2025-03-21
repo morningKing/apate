@@ -88,6 +88,26 @@ namespace apate
                 filePathList.AddRange(Program.GetAllFilesRecursively(fileObjectArray.GetValue(i).ToString()));//递归遍历文件夹，并将文件添加到filePathList
             }
 
+            // 添加MP4或ZIP后缀模式
+            if (添加MP4后缀ToolStripMenuItem.Checked || 添加ZIP后缀ToolStripMenuItem.Checked)
+            {
+                int successCount = 0;
+                int failCount = 0;
+                for (int i = 0; i < filePathList.Count; i++)
+                {
+                    try
+                    {
+                        File.Move(filePathList[i], filePathList[i] + maskExtension);
+                        successCount++;
+                    }
+                    catch (Exception)
+                    {
+                        failCount++;
+                    }
+                }
+                toolStripStatusLabel1.Text = "完成！成功" + successCount + "个，失败" + failCount + "个";
+                return;
+            }
 
             if (maskBytes.Length > 0)//如果面具文件有效
             {
@@ -181,6 +201,8 @@ namespace apate
             jPGToolStripMenuItem.Checked = false;
             mP4ToolStripMenuItem.Checked = false;
             mOVToolStripMenuItem.Checked = false;
+            添加MP4后缀ToolStripMenuItem.Checked = false;
+            添加ZIP后缀ToolStripMenuItem.Checked = false;
             maskBytes = new byte[] { };
             maskExtension = "";
             MaskFileDragLabel.AllowDrop = false;
@@ -242,6 +264,20 @@ namespace apate
                     TrueFileDragLabel.Image = Properties.Resources.drag;
                     TrueFileDragLabel.Text = "\r\n\r\n\r\n拖入\r\n伪装为MOV";
                     break;
+                case ModeEnum.AddMp4Extension://添加MP4后缀
+                    添加MP4后缀ToolStripMenuItem.Checked = true;
+                    maskExtension = ".mp4";
+                    TrueFileDragLabel.AllowDrop = true;
+                    TrueFileDragLabel.Image = Properties.Resources.drag;
+                    TrueFileDragLabel.Text = "\r\n\r\n\r\n拖入\r\n添加MP4后缀";
+                    break;
+                case ModeEnum.AddZipExtension://添加ZIP后缀
+                    添加ZIP后缀ToolStripMenuItem.Checked = true;
+                    maskExtension = ".zip";
+                    TrueFileDragLabel.AllowDrop = true;
+                    TrueFileDragLabel.Image = Properties.Resources.drag;
+                    TrueFileDragLabel.Text = "\r\n\r\n\r\n拖入\r\n添加ZIP后缀";
+                    break;
             }
         }
 
@@ -274,6 +310,16 @@ namespace apate
         private void mOVToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ModeSelect(ModeEnum.Mov);
+        }
+
+        private void 添加MP4后缀ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ModeSelect(ModeEnum.AddMp4Extension);
+        }
+
+        private void 添加ZIP后缀ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ModeSelect(ModeEnum.AddZipExtension);
         }
 
         private void 窗口置顶ToolStripMenuItem_Click(object sender, EventArgs e)
