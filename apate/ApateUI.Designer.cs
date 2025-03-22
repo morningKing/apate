@@ -41,6 +41,9 @@
             添加后缀ToolStripMenuItem = new ToolStripMenuItem();
             添加MP4后缀ToolStripMenuItem = new ToolStripMenuItem();
             添加ZIP后缀ToolStripMenuItem = new ToolStripMenuItem();
+            lZ4操作ToolStripMenuItem = new ToolStripMenuItem();
+            lZ4压缩ToolStripMenuItem = new ToolStripMenuItem();
+            lZ4解压ToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
             窗口置顶ToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator1 = new ToolStripSeparator();
@@ -71,7 +74,7 @@
             // 
             // 选项ToolStripMenuItem
             // 
-            选项ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 一键伪装ToolStripMenuItem, 面具伪装ToolStripMenuItem, 简易伪装ToolStripMenuItem, 添加后缀ToolStripMenuItem, toolStripSeparator2, 窗口置顶ToolStripMenuItem, toolStripSeparator1, 退出ToolStripMenuItem });
+            选项ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 一键伪装ToolStripMenuItem, 面具伪装ToolStripMenuItem, 简易伪装ToolStripMenuItem, 添加后缀ToolStripMenuItem, lZ4操作ToolStripMenuItem, toolStripSeparator2, 窗口置顶ToolStripMenuItem, toolStripSeparator1, 退出ToolStripMenuItem });
             选项ToolStripMenuItem.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             选项ToolStripMenuItem.Name = "选项ToolStripMenuItem";
             选项ToolStripMenuItem.Size = new Size(44, 21);
@@ -156,6 +159,29 @@
             添加ZIP后缀ToolStripMenuItem.Text = "ZIP";
             添加ZIP后缀ToolStripMenuItem.ToolTipText = "将拖入的文件批量添加.zip后缀，不修改文件内容";
             添加ZIP后缀ToolStripMenuItem.Click += 添加ZIP后缀ToolStripMenuItem_Click;
+            // 
+            // lZ4操作ToolStripMenuItem
+            // 
+            lZ4操作ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { lZ4压缩ToolStripMenuItem, lZ4解压ToolStripMenuItem });
+            lZ4操作ToolStripMenuItem.Name = "lZ4操作ToolStripMenuItem";
+            lZ4操作ToolStripMenuItem.Size = new Size(180, 22);
+            lZ4操作ToolStripMenuItem.Text = "LZ4操作";
+            // 
+            // lZ4压缩ToolStripMenuItem
+            // 
+            lZ4压缩ToolStripMenuItem.Name = "lZ4压缩ToolStripMenuItem";
+            lZ4压缩ToolStripMenuItem.Size = new Size(180, 22);
+            lZ4压缩ToolStripMenuItem.Text = "LZ4压缩";
+            lZ4压缩ToolStripMenuItem.ToolTipText = "使用LZ4算法压缩文件，可大幅减小文件体积";
+            lZ4压缩ToolStripMenuItem.Click += lZ4压缩ToolStripMenuItem_Click;
+            // 
+            // lZ4解压ToolStripMenuItem
+            // 
+            lZ4解压ToolStripMenuItem.Name = "lZ4解压ToolStripMenuItem";
+            lZ4解压ToolStripMenuItem.Size = new Size(180, 22);
+            lZ4解压ToolStripMenuItem.Text = "LZ4解压";
+            lZ4解压ToolStripMenuItem.ToolTipText = "解压使用LZ4算法压缩的文件，恢复原始文件";
+            lZ4解压ToolStripMenuItem.Click += lZ4解压ToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
@@ -329,6 +355,9 @@
         private ToolStripMenuItem 添加后缀ToolStripMenuItem;
         private ToolStripMenuItem 添加MP4后缀ToolStripMenuItem;
         private ToolStripMenuItem 添加ZIP后缀ToolStripMenuItem;
+        private ToolStripMenuItem lZ4操作ToolStripMenuItem;
+        private ToolStripMenuItem lZ4压缩ToolStripMenuItem;
+        private ToolStripMenuItem lZ4解压ToolStripMenuItem;
         private TableLayoutPanel tableLayoutPanel1;
     }
 }

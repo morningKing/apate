@@ -4,6 +4,7 @@ using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Xml;
 using static System.Net.Mime.MediaTypeNames;
+using K4os.Compression.LZ4;
 
 namespace apate
 {
@@ -203,6 +204,87 @@ namespace apate
                 bytes = File.ReadAllBytes(filePath);
             }
             return bytes;
+        }
+
+        /// <summary>
+        /// 使用LZ4算法压缩文件
+        /// </summary>
+        /// <param name="filePath">要压缩的文件路径</param>
+        /// <returns>成功返回1，失败返回-1</returns>
+        public static int CompressWithLZ4(string filePath)
+        {
+            try
+            {
+                byte[] fileData = File.ReadAllBytes(filePath);
+                
+                // 创建一个内存流用于存储压缩后的数据
+                using (MemoryStream compressedStream = new MemoryStream())
+                {
+                    using (BinaryWriter writer = new BinaryWriter(compressedStream))
+                    {
+                        // 写入原始文件大小，用于解压时使用
+                        writer.Write(fileData.Length);
+                        
+                        // 压缩数据
+                        byte[] compressedData = LZ4Pickler.Pickle(fileData);
+                        
+                        // 写入压缩后的数据
+                        writer.Write(compressedData);
+                    }
+                    
+                    // 将压缩后的数据写回文件
+                    File.WriteAllBytes(filePath, compressedStream.ToArray());
+                }
+                
+                return 1;
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
+        }
+        
+        /// <summary>
+        /// 使用LZ4算法解压文件
+        /// </summary>
+        /// <param name="filePath">要解压的文件路径</param>
+        /// <returns>成功返回1，失败返回-1</returns>
+        public static int DecompressWithLZ4(string filePath)
+        {
+            try
+            {
+                byte[] compressedFileData = File.ReadAllBytes(filePath);
+                
+                using (MemoryStream compressedStream = new MemoryStream(compressedFileData))
+                {
+                    using (BinaryReader reader = new BinaryReader(compressedStream))
+                    {
+                        // 读取原始文件大小
+                        int originalSize = reader.ReadInt32();
+                        
+                        // 读取压缩后的数据
+                        byte[] compressedData = reader.ReadBytes((int)compressedStream.Length - 4); // 4 bytes for int32
+                        
+                        // 解压数据
+                        byte[] decompressedData = LZ4Pickler.Unpickle(compressedData);
+                        
+                        // 检查解压后的数据长度是否与原始大小匹配
+                        if (decompressedData.Length != originalSize)
+                        {
+                            return -1;
+                        }
+                        
+                        // 将解压后的数据写回文件
+                        File.WriteAllBytes(filePath, decompressedData);
+                    }
+                }
+                
+                return 1;
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
         }
     }
 }

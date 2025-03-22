@@ -15,6 +15,8 @@ namespace apate
         Mp4,
         Mov,
         AddMp4Extension,
-        AddZipExtension
+        AddZipExtension,
+        LZ4Compress,    // LZ4压缩封装
+        LZ4Decompress   // LZ4解压还原
     }
 }

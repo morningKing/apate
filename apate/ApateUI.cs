@@ -1,5 +1,10 @@
 namespace apate
 {
+    using System;
+    using System.IO;
+    using System.Threading.Tasks;
+    using System.Windows.Forms;
+
     public partial class ApateUI : Form
     {
         private byte[] maskBytes = new byte[] { };
@@ -88,23 +93,169 @@ namespace apate
                 filePathList.AddRange(Program.GetAllFilesRecursively(fileObjectArray.GetValue(i).ToString()));//递归遍历文件夹，并将文件添加到filePathList
             }
 
+            // LZ4压缩模式
+            if (lZ4压缩ToolStripMenuItem.Checked)
+            {
+                int successCount = 0;
+                int failCount = 0;
+                
+                // 使用锁对象保证线程安全
+                object lockObj = new object();
+                
+                // 设置并行处理选项
+                ParallelOptions options = new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = Environment.ProcessorCount * 2
+                };
+                
+                // 使用并行处理
+                Parallel.ForEach(filePathList, options, (filePath) =>
+                {
+                    try
+                    {
+                        if (Program.CompressWithLZ4(filePath) == 1)
+                        {
+                            // 添加.lz4后缀
+                            File.Move(filePath, filePath + ".lz4");
+                            
+                            // 线程安全地增加计数
+                            lock (lockObj)
+                            {
+                                successCount++;
+                            }
+                        }
+                        else
+                        {
+                            // 线程安全地增加计数
+                            lock (lockObj)
+                            {
+                                failCount++;
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // 线程安全地增加计数
+                        lock (lockObj)
+                        {
+                            failCount++;
+                        }
+                    }
+                });
+                
+                toolStripStatusLabel1.Text = "完成！成功" + successCount + "个，失败" + failCount + "个";
+                return;
+            }
+
+            // LZ4解压模式
+            if (lZ4解压ToolStripMenuItem.Checked)
+            {
+                int successCount = 0;
+                int failCount = 0;
+                
+                // 使用锁对象保证线程安全
+                object lockObj = new object();
+                
+                // 设置并行处理选项
+                ParallelOptions options = new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = Environment.ProcessorCount * 2
+                };
+                
+                // 使用并行处理
+                Parallel.ForEach(filePathList, options, (filePath) =>
+                {
+                    try
+                    {
+                        // 检查文件是否有.lz4后缀
+                        if (filePath.ToLower().EndsWith(".lz4"))
+                        {
+                            string newFilePath = filePath.Substring(0, filePath.Length - 4); // 移除.lz4后缀
+                            
+                            // 先复制一个副本进行解压，成功后再重命名
+                            File.Copy(filePath, newFilePath, true);
+                            
+                            if (Program.DecompressWithLZ4(newFilePath) == 1)
+                            {
+                                // 线程安全地增加计数
+                                lock (lockObj)
+                                {
+                                    successCount++;
+                                }
+                            }
+                            else
+                            {
+                                // 解压失败，删除副本
+                                File.Delete(newFilePath);
+                                
+                                // 线程安全地增加计数
+                                lock (lockObj)
+                                {
+                                    failCount++;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // 文件没有.lz4后缀
+                            lock (lockObj)
+                            {
+                                failCount++;
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // 线程安全地增加计数
+                        lock (lockObj)
+                        {
+                            failCount++;
+                        }
+                    }
+                });
+                
+                toolStripStatusLabel1.Text = "完成！成功" + successCount + "个，失败" + failCount + "个";
+                return;
+            }
+
             // 添加后缀模式 - 包括MP4和ZIP
             if (添加MP4后缀ToolStripMenuItem.Checked || 添加ZIP后缀ToolStripMenuItem.Checked)
             {
                 int successCount = 0;
                 int failCount = 0;
-                for (int i = 0; i < filePathList.Count; i++)
+                
+                // 使用锁对象保证线程安全
+                object lockObj = new object();
+                
+                // 设置并行处理选项
+                ParallelOptions options = new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = Environment.ProcessorCount * 2
+                };
+                
+                // 使用并行处理
+                Parallel.ForEach(filePathList, options, (filePath) =>
                 {
                     try
                     {
-                        File.Move(filePathList[i], filePathList[i] + maskExtension);
-                        successCount++;
+                        File.Move(filePath, filePath + maskExtension);
+                        
+                        // 线程安全地增加计数
+                        lock (lockObj)
+                        {
+                            successCount++;
+                        }
                     }
                     catch (Exception)
                     {
-                        failCount++;
+                        // 线程安全地增加计数
+                        lock (lockObj)
+                        {
+                            failCount++;
+                        }
                     }
-                }
+                });
+                
                 toolStripStatusLabel1.Text = "完成！成功" + successCount + "个，失败" + failCount + "个";
                 return;
             }
@@ -113,20 +264,50 @@ namespace apate
             {
                 int successCount = 0;
                 int failCount = 0;
-                for (int i = 0; i < filePathList.Count; i++)
+                
+                // 使用锁对象保证线程安全
+                object lockObj = new object();
+                
+                // 设置并行处理选项
+                ParallelOptions options = new ParallelOptions
                 {
-
-                    if (Program.Disguise(filePathList[i], maskBytes) == 1)//如果伪装成功
+                    MaxDegreeOfParallelism = Environment.ProcessorCount * 2
+                };
+                
+                // 使用并行处理
+                Parallel.ForEach(filePathList, options, (filePath) =>
+                {
+                    try
                     {
-                        successCount++;
-                        File.Move(filePathList[i], filePathList[i] + maskExtension);
+                        if (Program.Disguise(filePath, maskBytes) == 1)//如果伪装成功
+                        {
+                            File.Move(filePath, filePath + maskExtension);
+                            
+                            // 线程安全地增加计数
+                            lock (lockObj)
+                            {
+                                successCount++;
+                            }
+                        }
+                        else//如果伪装失败
+                        {
+                            // 线程安全地增加计数
+                            lock (lockObj)
+                            {
+                                failCount++;
+                            }
+                        }
                     }
-                    else//如果伪装失败
+                    catch (Exception)
                     {
-                        failCount++;
-
+                        // 捕获可能的异常并安全地增加失败计数
+                        lock (lockObj)
+                        {
+                            failCount++;
+                        }
                     }
-                }
+                });
+                
                 toolStripStatusLabel1.Text = "完成！成功" + successCount + "个，失败" + failCount + "个";
             }
             else
@@ -166,20 +347,55 @@ namespace apate
                 {
                     filePathList.AddRange(Program.GetAllFilesRecursively(fileObjectArray.GetValue(i).ToString()));//递归遍历文件夹，并将文件添加到filePathList
                 }
+                
                 int successCount = 0;
                 int failCount = 0;
-                for (int i = 0; i < filePathList.Count; i++)
+                
+                // 使用锁对象保证线程安全
+                object lockObj = new object();
+                
+                // 设置并行处理选项，控制最大并行度
+                // 使用处理器核心数量×2作为最大并行度
+                ParallelOptions options = new ParallelOptions
                 {
-                    if (Program.Reveal(filePathList[i]) == 1)
+                    MaxDegreeOfParallelism = Environment.ProcessorCount * 2
+                };
+                
+                // 使用并行处理
+                Parallel.ForEach(filePathList, options, (filePath) =>
+                {
+                    try
                     {
-                        successCount++;
-                        File.Move(filePathList[i], filePathList[i].Substring(0, filePathList[i].LastIndexOf('.')));
+                        if (Program.Reveal(filePath) == 1)
+                        {
+                            string newPath = filePath.Substring(0, filePath.LastIndexOf('.'));
+                            File.Move(filePath, newPath);
+                            
+                            // 线程安全地增加计数
+                            lock (lockObj)
+                            {
+                                successCount++;
+                            }
+                        }
+                        else
+                        {
+                            // 线程安全地增加计数
+                            lock (lockObj)
+                            {
+                                failCount++;
+                            }
+                        }
                     }
-                    else
+                    catch (Exception)
                     {
-                        failCount++;
+                        // 捕获可能的异常并安全地增加失败计数
+                        lock (lockObj)
+                        {
+                            failCount++;
+                        }
                     }
-                }
+                });
+                
                 toolStripStatusLabel1.Text = "完成！成功" + successCount + "个，失败" + failCount + "个";
             }
         }
@@ -204,6 +420,9 @@ namespace apate
             添加后缀ToolStripMenuItem.Checked = false;
             添加MP4后缀ToolStripMenuItem.Checked = false;
             添加ZIP后缀ToolStripMenuItem.Checked = false;
+            lZ4操作ToolStripMenuItem.Checked = false;
+            lZ4压缩ToolStripMenuItem.Checked = false;
+            lZ4解压ToolStripMenuItem.Checked = false;
             maskBytes = new byte[] { };
             maskExtension = "";
             MaskFileDragLabel.AllowDrop = false;
@@ -214,7 +433,6 @@ namespace apate
             TrueFileDragLabel.Text = "";
             switch (mode)
             {
-
                 case ModeEnum.OneKey://一键伪装
                     一键伪装ToolStripMenuItem.Checked = true;
                     maskBytes = Properties.Resources.mask;
@@ -281,6 +499,21 @@ namespace apate
                     TrueFileDragLabel.Image = Properties.Resources.drag;
                     TrueFileDragLabel.Text = "\r\n\r\n\r\n拖入\r\n添加ZIP后缀";
                     break;
+                case ModeEnum.LZ4Compress://LZ4压缩
+                    lZ4操作ToolStripMenuItem.Checked = true;
+                    lZ4压缩ToolStripMenuItem.Checked = true;
+                    maskExtension = ".lz4";
+                    TrueFileDragLabel.AllowDrop = true;
+                    TrueFileDragLabel.Image = Properties.Resources.drag;
+                    TrueFileDragLabel.Text = "\r\n\r\n\r\n拖入\r\nLZ4压缩";
+                    break;
+                case ModeEnum.LZ4Decompress://LZ4解压
+                    lZ4操作ToolStripMenuItem.Checked = true;
+                    lZ4解压ToolStripMenuItem.Checked = true;
+                    TrueFileDragLabel.AllowDrop = true;
+                    TrueFileDragLabel.Image = Properties.Resources.drag;
+                    TrueFileDragLabel.Text = "\r\n\r\n\r\n拖入\r\nLZ4解压";
+                    break;
             }
         }
 
@@ -329,6 +562,16 @@ namespace apate
         {
             TopMost = !TopMost;
             窗口置顶ToolStripMenuItem.Checked = !窗口置顶ToolStripMenuItem.Checked;
+        }
+
+        private void lZ4压缩ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ModeSelect(ModeEnum.LZ4Compress);
+        }
+
+        private void lZ4解压ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ModeSelect(ModeEnum.LZ4Decompress);
         }
 
     }
