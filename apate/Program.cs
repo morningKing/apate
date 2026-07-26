@@ -32,12 +32,18 @@ namespace apate
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static int Main(string[] args)
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
+            // 如果有命令行参数，进入CLI模式
+            if (args.Length > 0)
+            {
+                return CliHandler.Run(args);
+            }
+
+            // 无参数，启动GUI模式
             ApplicationConfiguration.Initialize();
             System.Windows.Forms.Application.Run(new ApateUI());
+            return 0;
         }
 
         /// <summary>
@@ -244,19 +250,19 @@ namespace apate
                     }
 
                     // 读取末尾的原始文件头（反转存储的）
-                    long originalHeadPosition = fileInfo.Length - maskLengthIndicatorLength - maskHeadLength;
-                    if (originalHeadPosition < maskHeadLength)
+                    // 文件结构: [maskHead(maskHeadLength字节)] [原始内容] [reversedOriginalHead] [4字节标记]
+                    // reversedOriginalHead长度 = min(maskHeadLength, 原始文件长度)
+                    // 文件总长 = maskHeadLength + 原始文件长度 + reversedOriginalHead长度 + 4
+                    int originalHeadActualLength = (int)(fileInfo.Length - maskLengthIndicatorLength - maskHeadLength);
+                    // 非正常情况：原始文件比面具短，则originalHeadActualLength < maskHeadLength
+                    // 正常情况下：originalHeadActualLength == maskHeadLength
+                    if (originalHeadActualLength <= 0)
                     {
-                        // 非正常情况：面具长度大于真实文件长度
-                        originalHeadPosition = maskHeadLength;
+                        return null;
                     }
-                    fs.Position = originalHeadPosition;
-                    int originalHeadLength = (int)(fileInfo.Length - maskLengthIndicatorLength - originalHeadPosition);
-                    if (originalHeadLength <= 0 || originalHeadLength > maskHeadLength)
-                    {
-                        originalHeadLength = maskHeadLength;
-                    }
-                    byte[] reversedOriginalHead = reader.ReadBytes(originalHeadLength);
+                    // reversedOriginalHead位于文件末尾标记之前
+                    fs.Position = fileInfo.Length - maskLengthIndicatorLength - originalHeadActualLength;
+                    byte[] reversedOriginalHead = reader.ReadBytes(originalHeadActualLength);
                     byte[] originalHead = ReverseByteArray(reversedOriginalHead);
 
                     // 尝试识别原始文件格式
@@ -269,8 +275,16 @@ namespace apate
                     else
                     {
                         // 虽然无法识别原始格式，但末尾标记结构合理，仍可能是伪装文件
-                        // 进一步检查：面具长度标记是否合理（不超过文件一半）
-                        if (maskHeadLength <= (fileInfo.Length - maskLengthIndicatorLength) / 2)
+                        // 验证：文件开头是否与已知面具格式匹配（如MP4的ftyp标记）
+                        fs.Position = 0;
+                        byte[] fileStart = reader.ReadBytes(Math.Min(32, (int)fileInfo.Length));
+                        string maskFormat = IdentifyFileFormat(fileStart);
+                        if (maskFormat != null)
+                        {
+                            return "疑似伪装文件，面具格式: " + maskFormat + "，面具长度: " + maskHeadLength + " 字节（无法识别原始格式）";
+                        }
+                        // 如果文件很小而maskLength很大，也可能是伪装（原始文件比面具短）
+                        if (originalHeadActualLength < maskHeadLength)
                         {
                             return "疑似伪装文件，面具长度: " + maskHeadLength + " 字节（无法识别原始格式）";
                         }

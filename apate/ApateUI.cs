@@ -389,7 +389,7 @@ namespace apate
         {
             Activate();
             //弹窗确认
-            InfoBox infoBox = new InfoBox("注意！", "如果拖入未经过伪装的文件，可能会对该文件造成严重的数据破坏，且无法恢复！请务必做好备份！\r\n是否继续？");
+            InfoBox infoBox = new InfoBox("注意！", "还原操作将自动检测文件是否被伪装，未检测到伪装的文件会被跳过。\r\n但仍建议做好数据备份！\r\n是否继续？");
             //如果主窗口是置顶，则弹窗也置顶
             if (TopMost == true)
             {
@@ -411,6 +411,7 @@ namespace apate
                 
                 int successCount = 0;
                 int failCount = 0;
+                int skipCount = 0;
                 
                 // 使用锁对象保证线程安全
                 object lockObj = new object();
@@ -427,6 +428,17 @@ namespace apate
                 {
                     try
                     {
+                        // 安全预检：先检测文件是否被伪装，防止误操作损坏文件
+                        string detectResult = Program.DetectDisguise(filePath);
+                        if (detectResult == null)
+                        {
+                            lock (lockObj)
+                            {
+                                skipCount++;
+                            }
+                            return;
+                        }
+
                         if (Program.Reveal(filePath) == 1)
                         {
                             string newPath = filePath.Substring(0, filePath.LastIndexOf('.'));
@@ -457,7 +469,7 @@ namespace apate
                     }
                 });
                 
-                toolStripStatusLabel1.Text = "完成！成功" + successCount + "个，失败" + failCount + "个";
+                toolStripStatusLabel1.Text = "完成！成功" + successCount + "个，失败" + failCount + "个，跳过(未检测到伪装)" + skipCount + "个";
             }
         }
 
