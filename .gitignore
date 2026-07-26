@@ -1,6 +1,6 @@
 .vs
-apate/bin
-apate/obj
+**/bin/
+**/obj/
 .dotnet/
 publish/
 dotnet-sdk.zip
