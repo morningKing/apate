@@ -1,3 +1,7 @@
 .vs
 apate/bin
 apate/obj
+.dotnet/
+publish/
+dotnet-sdk.zip
+*.zip

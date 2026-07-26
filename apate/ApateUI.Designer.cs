@@ -44,6 +44,7 @@
             lZ4操作ToolStripMenuItem = new ToolStripMenuItem();
             lZ4压缩ToolStripMenuItem = new ToolStripMenuItem();
             lZ4解压ToolStripMenuItem = new ToolStripMenuItem();
+            伪装检测ToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
             窗口置顶ToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator1 = new ToolStripSeparator();
@@ -74,7 +75,7 @@
             // 
             // 选项ToolStripMenuItem
             // 
-            选项ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 一键伪装ToolStripMenuItem, 面具伪装ToolStripMenuItem, 简易伪装ToolStripMenuItem, 添加后缀ToolStripMenuItem, lZ4操作ToolStripMenuItem, toolStripSeparator2, 窗口置顶ToolStripMenuItem, toolStripSeparator1, 退出ToolStripMenuItem });
+            选项ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 一键伪装ToolStripMenuItem, 面具伪装ToolStripMenuItem, 简易伪装ToolStripMenuItem, 添加后缀ToolStripMenuItem, lZ4操作ToolStripMenuItem, 伪装检测ToolStripMenuItem, toolStripSeparator2, 窗口置顶ToolStripMenuItem, toolStripSeparator1, 退出ToolStripMenuItem });
             选项ToolStripMenuItem.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             选项ToolStripMenuItem.Name = "选项ToolStripMenuItem";
             选项ToolStripMenuItem.Size = new Size(44, 21);
@@ -182,6 +183,14 @@
             lZ4解压ToolStripMenuItem.Text = "LZ4解压";
             lZ4解压ToolStripMenuItem.ToolTipText = "解压使用LZ4算法压缩的文件，恢复原始文件";
             lZ4解压ToolStripMenuItem.Click += lZ4解压ToolStripMenuItem_Click;
+            // 
+            // 伪装检测ToolStripMenuItem
+            // 
+            伪装检测ToolStripMenuItem.Name = "伪装检测ToolStripMenuItem";
+            伪装检测ToolStripMenuItem.Size = new Size(180, 22);
+            伪装检测ToolStripMenuItem.Text = "伪装检测";
+            伪装检测ToolStripMenuItem.ToolTipText = "检测拖入的文件是否被本工具伪装过\r\n不会修改文件内容，仅进行检测";
+            伪装检测ToolStripMenuItem.Click += 伪装检测ToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
@@ -358,6 +367,7 @@
         private ToolStripMenuItem lZ4操作ToolStripMenuItem;
         private ToolStripMenuItem lZ4压缩ToolStripMenuItem;
         private ToolStripMenuItem lZ4解压ToolStripMenuItem;
+        private ToolStripMenuItem 伪装检测ToolStripMenuItem;
         private TableLayoutPanel tableLayoutPanel1;
     }
 }

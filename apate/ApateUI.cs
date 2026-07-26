@@ -93,6 +93,67 @@ namespace apate
                 filePathList.AddRange(Program.GetAllFilesRecursively(fileObjectArray.GetValue(i).ToString()));//递归遍历文件夹，并将文件添加到filePathList
             }
 
+            // 伪装检测模式
+            if (伪装检测ToolStripMenuItem.Checked)
+            {
+                int disguisedCount = 0;
+                int normalCount = 0;
+                List<string> results = new List<string>();
+                
+                object lockObj = new object();
+                
+                ParallelOptions options = new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = Environment.ProcessorCount * 2
+                };
+                
+                Parallel.ForEach(filePathList, options, (filePath) =>
+                {
+                    try
+                    {
+                        string result = Program.DetectDisguise(filePath);
+                        lock (lockObj)
+                        {
+                            if (result != null)
+                            {
+                                disguisedCount++;
+                                results.Add("[伪装] " + Path.GetFileName(filePath) + " - " + result);
+                            }
+                            else
+                            {
+                                normalCount++;
+                                results.Add("[正常] " + Path.GetFileName(filePath));
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        lock (lockObj)
+                        {
+                            normalCount++;
+                            results.Add("[错误] " + Path.GetFileName(filePath) + " - 无法读取");
+                        }
+                    }
+                });
+                
+                // 显示检测结果
+                string summary = "检测完成！共" + filePathList.Count + "个文件，检测到伪装: " + disguisedCount + "个，正常: " + normalCount + "个";
+                toolStripStatusLabel1.Text = summary;
+                
+                // 如果有伪装文件，弹窗显示详细结果
+                if (disguisedCount > 0)
+                {
+                    string detail = summary + "\r\n\r\n详细信息：\r\n" + string.Join("\r\n", results.FindAll(r => r.StartsWith("[伪装]") || r.StartsWith("[错误]")));
+                    InfoBox resultBox = new InfoBox("伪装检测结果", detail);
+                    if (TopMost == true)
+                    {
+                        resultBox.TopMost = true;
+                    }
+                    resultBox.ShowDialog();
+                }
+                return;
+            }
+
             // LZ4压缩模式
             if (lZ4压缩ToolStripMenuItem.Checked)
             {
@@ -423,6 +484,7 @@ namespace apate
             lZ4操作ToolStripMenuItem.Checked = false;
             lZ4压缩ToolStripMenuItem.Checked = false;
             lZ4解压ToolStripMenuItem.Checked = false;
+            伪装检测ToolStripMenuItem.Checked = false;
             maskBytes = new byte[] { };
             maskExtension = "";
             MaskFileDragLabel.AllowDrop = false;
@@ -514,6 +576,12 @@ namespace apate
                     TrueFileDragLabel.Image = Properties.Resources.drag;
                     TrueFileDragLabel.Text = "\r\n\r\n\r\n拖入\r\nLZ4解压";
                     break;
+                case ModeEnum.Detect://伪装检测
+                    伪装检测ToolStripMenuItem.Checked = true;
+                    TrueFileDragLabel.AllowDrop = true;
+                    TrueFileDragLabel.Image = Properties.Resources.drag;
+                    TrueFileDragLabel.Text = "\r\n\r\n\r\n拖入\r\n检测伪装";
+                    break;
             }
         }
 
@@ -572,6 +640,11 @@ namespace apate
         private void lZ4解压ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ModeSelect(ModeEnum.LZ4Decompress);
+        }
+
+        private void 伪装检测ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ModeSelect(ModeEnum.Detect);
         }
 
     }

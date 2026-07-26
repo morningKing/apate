@@ -207,6 +207,150 @@ namespace apate
         }
 
         /// <summary>
+        /// 检测文件是否被伪装
+        /// </summary>
+        /// <param name="filePath">目标文件路径</param>
+        /// <returns>检测结果描述字符串，如果未检测到伪装则返回null</returns>
+        public static string DetectDisguise(string filePath)
+        {
+            try
+            {
+                FileInfo fileInfo = new FileInfo(filePath);
+                // 文件太小，不可能是伪装文件（至少需要面具+原始头+4字节标记）
+                if (fileInfo.Length < maskLengthIndicatorLength + 2)
+                {
+                    return null;
+                }
+
+                using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                using (BinaryReader reader = new BinaryReader(fs))
+                {
+                    // 读取末尾4字节，获取面具长度标记
+                    fs.Position = fileInfo.Length - maskLengthIndicatorLength;
+                    int maskHeadLength = BytesToInt(reader.ReadBytes(maskLengthIndicatorLength));
+
+                    // 验证面具长度是否合理
+                    if (maskHeadLength <= 0 || maskHeadLength > maximumMaskLength)
+                    {
+                        return null;
+                    }
+
+                    // 验证文件总长度是否合理：文件长度应 >= 面具长度 + 原始头长度 + 标记长度
+                    // 即 fileInfo.Length >= maskHeadLength + maskHeadLength + 4（正常情况下原始头长度等于面具长度）
+                    // 或者至少 fileInfo.Length > maskHeadLength + 4
+                    if (fileInfo.Length <= maskHeadLength + maskLengthIndicatorLength)
+                    {
+                        return null;
+                    }
+
+                    // 读取末尾的原始文件头（反转存储的）
+                    long originalHeadPosition = fileInfo.Length - maskLengthIndicatorLength - maskHeadLength;
+                    if (originalHeadPosition < maskHeadLength)
+                    {
+                        // 非正常情况：面具长度大于真实文件长度
+                        originalHeadPosition = maskHeadLength;
+                    }
+                    fs.Position = originalHeadPosition;
+                    int originalHeadLength = (int)(fileInfo.Length - maskLengthIndicatorLength - originalHeadPosition);
+                    if (originalHeadLength <= 0 || originalHeadLength > maskHeadLength)
+                    {
+                        originalHeadLength = maskHeadLength;
+                    }
+                    byte[] reversedOriginalHead = reader.ReadBytes(originalHeadLength);
+                    byte[] originalHead = ReverseByteArray(reversedOriginalHead);
+
+                    // 尝试识别原始文件格式
+                    string detectedFormat = IdentifyFileFormat(originalHead);
+
+                    if (detectedFormat != null)
+                    {
+                        return "检测到伪装！原始格式可能为: " + detectedFormat + "，面具长度: " + maskHeadLength + " 字节";
+                    }
+                    else
+                    {
+                        // 虽然无法识别原始格式，但末尾标记结构合理，仍可能是伪装文件
+                        // 进一步检查：面具长度标记是否合理（不超过文件一半）
+                        if (maskHeadLength <= (fileInfo.Length - maskLengthIndicatorLength) / 2)
+                        {
+                            return "疑似伪装文件，面具长度: " + maskHeadLength + " 字节（无法识别原始格式）";
+                        }
+                        return null;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 根据文件头识别文件格式
+        /// </summary>
+        /// <param name="fileHead">文件头字节数组</param>
+        /// <returns>文件格式描述，无法识别返回null</returns>
+        private static string IdentifyFileFormat(byte[] fileHead)
+        {
+            if (fileHead == null || fileHead.Length < 2)
+                return null;
+
+            // ZIP: PK (50 4B 03 04)
+            if (fileHead.Length >= 4 && fileHead[0] == 0x50 && fileHead[1] == 0x4B && fileHead[2] == 0x03 && fileHead[3] == 0x04)
+                return "ZIP";
+
+            // EXE/DLL: MZ (4D 5A)
+            if (fileHead[0] == 0x4D && fileHead[1] == 0x5A)
+                return "EXE/DLL";
+
+            // JPG: FF D8 FF
+            if (fileHead.Length >= 3 && fileHead[0] == 0xFF && fileHead[1] == 0xD8 && fileHead[2] == 0xFF)
+                return "JPG";
+
+            // PNG: 89 50 4E 47
+            if (fileHead.Length >= 4 && fileHead[0] == 0x89 && fileHead[1] == 0x50 && fileHead[2] == 0x4E && fileHead[3] == 0x47)
+                return "PNG";
+
+            // GIF: 47 49 46 38
+            if (fileHead.Length >= 4 && fileHead[0] == 0x47 && fileHead[1] == 0x49 && fileHead[2] == 0x46 && fileHead[3] == 0x38)
+                return "GIF";
+
+            // PDF: 25 50 44 46 (%PDF)
+            if (fileHead.Length >= 4 && fileHead[0] == 0x25 && fileHead[1] == 0x50 && fileHead[2] == 0x44 && fileHead[3] == 0x46)
+                return "PDF";
+
+            // MP4: 检查ftyp标记（偏移4-7字节为66 74 79 70）
+            if (fileHead.Length >= 8 && fileHead[4] == 0x66 && fileHead[5] == 0x74 && fileHead[6] == 0x79 && fileHead[7] == 0x70)
+                return "MP4";
+
+            // MOV: moov (6D 6F 6F 76)
+            if (fileHead.Length >= 4 && fileHead[0] == 0x6D && fileHead[1] == 0x6F && fileHead[2] == 0x6F && fileHead[3] == 0x76)
+                return "MOV";
+
+            // RAR: 52 61 72 21
+            if (fileHead.Length >= 4 && fileHead[0] == 0x52 && fileHead[1] == 0x61 && fileHead[2] == 0x72 && fileHead[3] == 0x21)
+                return "RAR";
+
+            // 7Z: 37 7A BC AF
+            if (fileHead.Length >= 4 && fileHead[0] == 0x37 && fileHead[1] == 0x7A && fileHead[2] == 0xBC && fileHead[3] == 0xAF)
+                return "7Z";
+
+            // Word(.docx)/Excel(.xlsx)/PPT(.pptx) 本质是ZIP
+            // 已在ZIP中检测
+
+            // MP3: FF FB 或 FF F3 或 FF F2 或 ID3 (49 44 33)
+            if (fileHead.Length >= 3 && fileHead[0] == 0x49 && fileHead[1] == 0x44 && fileHead[2] == 0x33)
+                return "MP3";
+            if (fileHead.Length >= 2 && fileHead[0] == 0xFF && (fileHead[1] == 0xFB || fileHead[1] == 0xF3 || fileHead[1] == 0xF2))
+                return "MP3";
+
+            // Word(.doc): D0 CF 11 E0
+            if (fileHead.Length >= 4 && fileHead[0] == 0xD0 && fileHead[1] == 0xCF && fileHead[2] == 0x11 && fileHead[3] == 0xE0)
+                return "DOC/OLE";
+
+            return null;
+        }
+
+        /// <summary>
         /// 使用LZ4算法压缩文件
         /// </summary>
         /// <param name="filePath">要压缩的文件路径</param>

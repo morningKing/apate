@@ -17,6 +17,7 @@ namespace apate
         AddMp4Extension,
         AddZipExtension,
         LZ4Compress,    // LZ4压缩封装
-        LZ4Decompress   // LZ4解压还原
+        LZ4Decompress,  // LZ4解压还原
+        Detect          // 伪装检测
     }
 }
