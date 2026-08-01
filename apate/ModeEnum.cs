@@ -16,6 +16,7 @@ namespace apate
         Mov,
         AddMp4Extension,
         AddZipExtension,
+        AddCustomExtension,   // 添加自定义后缀
         LZ4Compress,    // LZ4压缩封装
         LZ4Decompress,  // LZ4解压还原
         Detect          // 伪装检测

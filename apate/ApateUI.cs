@@ -9,6 +9,7 @@ namespace apate
     {
         private byte[] maskBytes = new byte[] { };
         private string maskExtension = "";
+        private string customExtension = "";//用户自定义后缀
         //private string maskFilePath;
         public ApateUI()
         {
@@ -279,8 +280,8 @@ namespace apate
                 return;
             }
 
-            // 添加后缀模式 - 包括MP4和ZIP
-            if (添加MP4后缀ToolStripMenuItem.Checked || 添加ZIP后缀ToolStripMenuItem.Checked)
+            // 添加后缀模式 - 包括MP4、ZIP和自定义后缀
+            if (添加MP4后缀ToolStripMenuItem.Checked || 添加ZIP后缀ToolStripMenuItem.Checked || 自定义后缀ToolStripMenuItem.Checked)
             {
                 int successCount = 0;
                 int failCount = 0;
@@ -388,8 +389,19 @@ namespace apate
         private void RevealMaskLabel_DragDrop(object sender, DragEventArgs e)
         {
             Activate();
-            //弹窗确认
-            InfoBox infoBox = new InfoBox("注意！", "还原操作将自动检测文件是否被伪装，未检测到伪装的文件会被跳过。\r\n但仍建议做好数据备份！\r\n是否继续？");
+            //是否开启强制还原（跳过安全预检）
+            bool forceReveal = 强制还原ToolStripMenuItem.Checked;
+            //弹窗确认（根据是否强制显示不同的提示）
+            string warningText;
+            if (forceReveal)
+            {
+                warningText = "当前已开启《强制还原》，将跳过安全预检，对所有拖入的文件强制执行还原！\r\n未伪装的文件可能被严重损坏且无法恢复！\r\n是否继续？";
+            }
+            else
+            {
+                warningText = "还原操作将自动检测文件是否被伪装，未检测到伪装的文件会被跳过。\r\n但仍建议做好数据备份！\r\n是否继续？";
+            }
+            InfoBox infoBox = new InfoBox("注意！", warningText);
             //如果主窗口是置顶，则弹窗也置顶
             if (TopMost == true)
             {
@@ -428,15 +440,18 @@ namespace apate
                 {
                     try
                     {
-                        // 安全预检：先检测文件是否被伪装，防止误操作损坏文件
-                        string detectResult = Program.DetectDisguise(filePath);
-                        if (detectResult == null)
+                        // 安全预检：先检测文件是否被伪装，防止误操作损坏文件（强制模式下跳过）
+                        if (!forceReveal)
                         {
-                            lock (lockObj)
+                            string detectResult = Program.DetectDisguise(filePath);
+                            if (detectResult == null)
                             {
-                                skipCount++;
+                                lock (lockObj)
+                                {
+                                    skipCount++;
+                                }
+                                return;
                             }
-                            return;
                         }
 
                         if (Program.Reveal(filePath) == 1)
@@ -493,6 +508,7 @@ namespace apate
             添加后缀ToolStripMenuItem.Checked = false;
             添加MP4后缀ToolStripMenuItem.Checked = false;
             添加ZIP后缀ToolStripMenuItem.Checked = false;
+            自定义后缀ToolStripMenuItem.Checked = false;
             lZ4操作ToolStripMenuItem.Checked = false;
             lZ4压缩ToolStripMenuItem.Checked = false;
             lZ4解压ToolStripMenuItem.Checked = false;
@@ -573,6 +589,14 @@ namespace apate
                     TrueFileDragLabel.Image = Properties.Resources.drag;
                     TrueFileDragLabel.Text = "\r\n\r\n\r\n拖入\r\n添加ZIP后缀";
                     break;
+                case ModeEnum.AddCustomExtension://添加自定义后缀
+                    添加后缀ToolStripMenuItem.Checked = true;
+                    自定义后缀ToolStripMenuItem.Checked = true;
+                    maskExtension = customExtension;
+                    TrueFileDragLabel.AllowDrop = true;
+                    TrueFileDragLabel.Image = Properties.Resources.drag;
+                    TrueFileDragLabel.Text = "\r\n\r\n\r\n拖入\r\n添加" + customExtension + "后缀";
+                    break;
                 case ModeEnum.LZ4Compress://LZ4压缩
                     lZ4操作ToolStripMenuItem.Checked = true;
                     lZ4压缩ToolStripMenuItem.Checked = true;
@@ -636,6 +660,29 @@ namespace apate
         private void 添加ZIP后缀ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ModeSelect(ModeEnum.AddZipExtension);
+        }
+
+        private void 自定义后缀ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //弹出输入框让用户输入自定义后缀
+            string input = Microsoft.VisualBasic.Interaction.InputBox(
+                "请输入要添加的文件后缀（例如 .7z 或 docx）：",
+                "自定义后缀",
+                "");
+            //用户取消或输入为空
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return;
+            }
+            string ext = input.Trim();
+            //确保后缀以点开头
+            if (!ext.StartsWith("."))
+            {
+                ext = "." + ext;
+            }
+            customExtension = ext;
+            ModeSelect(ModeEnum.AddCustomExtension);
+            toolStripStatusLabel1.Text = "已设置自定义后缀：" + ext + "，拖入文件即可批量添加";
         }
 
         private void 窗口置顶ToolStripMenuItem_Click(object sender, EventArgs e)

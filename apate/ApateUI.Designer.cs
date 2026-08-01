@@ -41,10 +41,12 @@
             添加后缀ToolStripMenuItem = new ToolStripMenuItem();
             添加MP4后缀ToolStripMenuItem = new ToolStripMenuItem();
             添加ZIP后缀ToolStripMenuItem = new ToolStripMenuItem();
+            自定义后缀ToolStripMenuItem = new ToolStripMenuItem();
             lZ4操作ToolStripMenuItem = new ToolStripMenuItem();
             lZ4压缩ToolStripMenuItem = new ToolStripMenuItem();
             lZ4解压ToolStripMenuItem = new ToolStripMenuItem();
             伪装检测ToolStripMenuItem = new ToolStripMenuItem();
+            强制还原ToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
             窗口置顶ToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator1 = new ToolStripSeparator();
@@ -75,7 +77,7 @@
             // 
             // 选项ToolStripMenuItem
             // 
-            选项ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 一键伪装ToolStripMenuItem, 面具伪装ToolStripMenuItem, 简易伪装ToolStripMenuItem, 添加后缀ToolStripMenuItem, lZ4操作ToolStripMenuItem, 伪装检测ToolStripMenuItem, toolStripSeparator2, 窗口置顶ToolStripMenuItem, toolStripSeparator1, 退出ToolStripMenuItem });
+            选项ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 一键伪装ToolStripMenuItem, 面具伪装ToolStripMenuItem, 简易伪装ToolStripMenuItem, 添加后缀ToolStripMenuItem, lZ4操作ToolStripMenuItem, 伪装检测ToolStripMenuItem, toolStripSeparator2, 强制还原ToolStripMenuItem, 窗口置顶ToolStripMenuItem, toolStripSeparator1, 退出ToolStripMenuItem });
             选项ToolStripMenuItem.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             选项ToolStripMenuItem.Name = "选项ToolStripMenuItem";
             选项ToolStripMenuItem.Size = new Size(44, 21);
@@ -140,7 +142,7 @@
             // 
             // 添加后缀ToolStripMenuItem
             // 
-            添加后缀ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 添加MP4后缀ToolStripMenuItem, 添加ZIP后缀ToolStripMenuItem });
+            添加后缀ToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { 添加MP4后缀ToolStripMenuItem, 添加ZIP后缀ToolStripMenuItem, 自定义后缀ToolStripMenuItem });
             添加后缀ToolStripMenuItem.Name = "添加后缀ToolStripMenuItem";
             添加后缀ToolStripMenuItem.Size = new Size(180, 22);
             添加后缀ToolStripMenuItem.Text = "添加后缀";
@@ -160,6 +162,14 @@
             添加ZIP后缀ToolStripMenuItem.Text = "ZIP";
             添加ZIP后缀ToolStripMenuItem.ToolTipText = "将拖入的文件批量添加.zip后缀，不修改文件内容";
             添加ZIP后缀ToolStripMenuItem.Click += 添加ZIP后缀ToolStripMenuItem_Click;
+            // 
+            // 自定义后缀ToolStripMenuItem
+            // 
+            自定义后缀ToolStripMenuItem.Name = "自定义后缀ToolStripMenuItem";
+            自定义后缀ToolStripMenuItem.Size = new Size(180, 22);
+            自定义后缀ToolStripMenuItem.Text = "自定义后缀...";
+            自定义后缀ToolStripMenuItem.ToolTipText = "将拖入的文件批量添加自定义后缀（如.7z、.docx），不修改文件内容";
+            自定义后缀ToolStripMenuItem.Click += 自定义后缀ToolStripMenuItem_Click;
             // 
             // lZ4操作ToolStripMenuItem
             // 
@@ -191,6 +201,14 @@
             伪装检测ToolStripMenuItem.Text = "伪装检测";
             伪装检测ToolStripMenuItem.ToolTipText = "检测拖入的文件是否被本工具伪装过\r\n不会修改文件内容，仅进行检测";
             伪装检测ToolStripMenuItem.Click += 伪装检测ToolStripMenuItem_Click;
+            // 
+            // 强制还原ToolStripMenuItem
+            // 
+            强制还原ToolStripMenuItem.CheckOnClick = true;
+            强制还原ToolStripMenuItem.Name = "强制还原ToolStripMenuItem";
+            强制还原ToolStripMenuItem.Size = new Size(180, 22);
+            强制还原ToolStripMenuItem.Text = "强制还原（跳过预检）";
+            强制还原ToolStripMenuItem.ToolTipText = "勾选后，还原操作将跳过安全预检，对所有拖入的文件强制执行还原\r\n可能损坏未被伪装的文件，请谨慎使用";
             // 
             // toolStripSeparator2
             // 
@@ -364,10 +382,12 @@
         private ToolStripMenuItem 添加后缀ToolStripMenuItem;
         private ToolStripMenuItem 添加MP4后缀ToolStripMenuItem;
         private ToolStripMenuItem 添加ZIP后缀ToolStripMenuItem;
+        private ToolStripMenuItem 自定义后缀ToolStripMenuItem;
         private ToolStripMenuItem lZ4操作ToolStripMenuItem;
         private ToolStripMenuItem lZ4压缩ToolStripMenuItem;
         private ToolStripMenuItem lZ4解压ToolStripMenuItem;
         private ToolStripMenuItem 伪装检测ToolStripMenuItem;
+        private ToolStripMenuItem 强制还原ToolStripMenuItem;
         private TableLayoutPanel tableLayoutPanel1;
     }
 }
